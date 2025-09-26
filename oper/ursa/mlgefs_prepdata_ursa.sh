@@ -13,9 +13,11 @@ conda activate graphcast
 echo "Current state: $curr_datetime"
 echo "6 hours earlier state: $prev_datetime"
 
-export GEFSDATA=/scratch3/NCEPDEV/stmp/Linlin.Cui/gefs_wcoss2
+#export GEFSDATA=/scratch3/NCEPDEV/stmp/Linlin.Cui/gefs_wcoss2
+export GEFSDATA=/scratch3/NCEPDEV/hurricane/noscrub/com/COMGEFSv12
 
-DATAROOT=/scratch3/NCEPDEV/stmp/$USER
+DATAROOT=/scratch3/NCEPDEV/stmp/$USER/EAGLE_ensemble
+mkdir -p $DATAROOT
 PDY=${curr_datetime:0:8}
 cyc=${curr_datetime:8:2}
 
@@ -31,4 +33,4 @@ end_time=$(date +%s)  # Record the end time in seconds since the epoch
 
 # Calculate and print the execution time
 execution_time=$((end_time - start_time))
-cho "Execution time for gen_gefs_ics.py: $execution_time seconds"
+echo "Execution time for gen_gefs_ics.py: $execution_time seconds"

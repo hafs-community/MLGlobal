@@ -26,8 +26,10 @@ set -x
 export envir=dev
 
 export PACKAGEROOT=/scratch3/NCEPDEV/nems/Linlin.Cui/git/others/TC_tracker
-export DATAROOT=/scratch3/NCEPDEV/stmp/Linlin.Cui/ptmp
+#export DATAROOT=/scratch3/NCEPDEV/stmp/Linlin.Cui/ptmp
+export DATAROOT=/scratch3/NCEPDEV/stmp/${USER}/EAGLE_tracker
 export COMROOT=${DATAROOT}/com
+export COMOUT=${COMROOT:?}/aigfs.${PDY}/${cyc}/products/atmos/cyclone/tracks
 export KEEPDATA=NO
 
 # experiment configurations:
@@ -48,7 +50,7 @@ if [ "$pert" = "" ]; then
    export fileprefix=graphcastgfs
    export modelname="MGFS"
 else
-   export COMINgfs=/scratch3/NCEPDEV/stmp/$USER/pmlgefs.$PDY/$cyc
+   export COMINgfs=/scratch3/NCEPDEV/stmp/$USER/EAGLE_ensemble/pmlgefs.$PDY/$cyc
    pertmember=`echo $pert | cut -c2-3`
    weight=$(expr $pertmember + 0)
    export ensmember=forecasts_13_levels_${pert}_model_${weight}
@@ -65,9 +67,15 @@ ${PACKAGEROOT}/jobs/JAIGFS_CYCLONE_TRACK
 
 if [ $? -ne 0 ]; then
   echo "tracker run FAILED"
-  exit
+  exit 1
 else
   echo "tracker run FINISHED"
+fi
+
+# Deliver atcfunix track file
+filename=$(echo "$modelname" | tr '[:upper:]' '[:lower:]')
+if [ -e ${COMOUT}/${filename}p.t${cyc}z.cyclone.trackatcfunix ]; then
+  cp -p ${COMOUT}/${filename}p.t${cyc}z.cyclone.trackatcfunix ${COMINgfs}/${ensmember}/
 fi
 
 #%include <tail.h> 

@@ -10,7 +10,8 @@ hostname
 
 echo "Current state: $curr_datetime"
 
-DATAROOT=/scratch3/NCEPDEV/stmp/$USER
+DATAROOT=/scratch3/NCEPDEV/stmp/$USER/EAGLE_ensemble
+mkdir -p $DATAROOT
 PDY=${curr_datetime:0:8}
 cyc=${curr_datetime:8:2}
 
@@ -28,6 +29,12 @@ start_time=$(date +%s)
 echo "start runing graphcast to get real time 10-days forecasts for: $curr_datetime"
 # Run another Python script
 numactl --interleave=all python run_graphcast_ens.py -i $DATAROOT/pmlgefs."$PDY"/"$cyc"/source-ge"$gefs_member"_date-"$curr_datetime"_res-0.25_levels-"$num_pressure_levels"_steps-2.nc -o $DATAROOT/pmlgefs."$PDY"/"$cyc"/ -w /scratch3/NCEPDEV/nems/Linlin.Cui/gc_weights/ -m "$gefs_member" -c "$config_path" -l "$forecast_length" -p "$num_pressure_levels" -u no -k yes
+
+# Copy over the input IC
+pertmember=`echo $gefs_member | cut -c2-3`
+weight=$(expr $pertmember + 0)
+mkdir -p $DATAROOT/pmlgefs."$PDY"/"$cyc"/forecasts_"$num_pressure_levels"_levels_"$gefs_member"_model_"$weight"/input
+cp -p $DATAROOT/pmlgefs."$PDY"/"$cyc"/source-ge"$gefs_member"_date-"$curr_datetime"_res-0.25_levels-"$num_pressure_levels"_steps-2.nc $DATAROOT/pmlgefs."$PDY"/"$cyc"/forecasts_"$num_pressure_levels"_levels_"$gefs_member"_model_"$weight"/input/
 
 # Calculate and print the execution time
 end_time=$(date +%s)  # Record the end time in seconds since the epoch
