@@ -1,4 +1,4 @@
-#!/bin/bash --login
+#!/bin/bash
 
 # load necessary modules
 module use /contrib/spack-stack/spack-stack-1.9.1/envs/ue-oneapi-2024.2.1/install/modulefiles/Core/
@@ -16,7 +16,7 @@ echo "6 hours earlier state: $prev_datetime"
 #export GEFSDATA=/scratch3/NCEPDEV/stmp/Linlin.Cui/gefs_wcoss2
 export GEFSDATA=/scratch3/NCEPDEV/hurricane/noscrub/com/COMGEFSv12
 
-DATAROOT=/scratch3/NCEPDEV/stmp/$USER/EAGLE_ensemble
+DATAROOT=/scratch3/NCEPDEV/stmp/$USER/${SUBEXPT:-EAGLE_ensemble}
 mkdir -p $DATAROOT
 PDY=${curr_datetime:0:8}
 cyc=${curr_datetime:8:2}

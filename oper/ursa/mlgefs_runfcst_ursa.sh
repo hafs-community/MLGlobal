@@ -1,4 +1,4 @@
-#!/bin/bash --login
+#!/bin/bash
 
 # load necessary modules
 module use /contrib/spack-stack/spack-stack-1.9.1/envs/ue-oneapi-2024.2.1/install/modulefiles/Core/
@@ -10,12 +10,12 @@ hostname
 
 echo "Current state: $curr_datetime"
 
-DATAROOT=/scratch3/NCEPDEV/stmp/$USER/EAGLE_ensemble
+DATAROOT=/scratch3/NCEPDEV/stmp/$USER/${SUBEXPT:-EAGLE_ensemble}
 mkdir -p $DATAROOT
 PDY=${curr_datetime:0:8}
 cyc=${curr_datetime:8:2}
 
-forecast_length=64
+forecast_length=${forecast_length:-64}
 echo "forecast length: $forecast_length"
 
 num_pressure_levels=13

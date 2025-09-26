@@ -1,4 +1,4 @@
-#!/bin/bash --login
+#!/bin/bash
 
 # load necessary modules
 module use /contrib/spack-stack/spack-stack-1.9.1/envs/ue-oneapi-2024.2.1/install/modulefiles/Core/

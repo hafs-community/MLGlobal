@@ -10,7 +10,7 @@ from time import time
 import subprocess
 import json
 
-import numpy as np
+#import numpy as np
 
 def get_closest_cycle(now=None):
 
@@ -54,8 +54,8 @@ def submit_slurm_run(member, param, model_id, curr_datetime, prev_datetime):
     #Step 1 - generate input file
     command1 = [
         'sbatch', '--nodes=1', '--ntasks=1', '--mem=10g', f'--account={account}', '--partition=u1-service', \
-        '--time=30:00', f'--job-name=getdata_{member}', f'--output=slurm/getdata_{curr_datetime}_{member}_%j.log', f'--error=slurm/getdata_{curr_datetime}_{member}_%j.log', \
-        f'--export=gefs_member={member},config_path={param},model_id={model_id},curr_datetime={curr_datetime},prev_datetime={prev_datetime}', \
+        '--time=30:00', f'--job-name=getdata_{member}', f'--output=output/getdata_{curr_datetime}_{member}_%j.log', f'--error=output/getdata_{curr_datetime}_{member}_%j.log', \
+        f'--export=SUBEXPT={experiment},gefs_member={member},config_path={param},model_id={model_id},curr_datetime={curr_datetime},prev_datetime={prev_datetime}', \
         'mlgefs_prepdata_ursa.sh'
     ]
     job_id1 = get_job_id(command1)
@@ -63,13 +63,13 @@ def submit_slurm_run(member, param, model_id, curr_datetime, prev_datetime):
     #Step 2 - run graphcast
     if forecast_run_type == 'gpu':
         command2 = ['sbatch', f'--dependency=afterok:{job_id1}', '--nodes=1', f'--account={account}', '--partition=u1-h100', \
-            '--qos=gpuwf', '--gres=gpu:h100:1', '--exclusive', '--time=30:00', f'--job-name=run_{member}', f'--output=slurm/fcst_{curr_datetime}_{member}_%j.log', \
-            f'--error=slurm/fcst_{curr_datetime}_{member}_%j.log', f'--export=gefs_member={member},config_path={param},model_id={model_id},curr_datetime={curr_datetime}', \
+            '--qos=gpuwf', '--gres=gpu:h100:1', '--exclusive', '--time=30:00', f'--job-name=run_{member}', f'--output=output/fcst_{curr_datetime}_{member}_%j.log', \
+            f'--error=output/fcst_{curr_datetime}_{member}_%j.log', f'--export=SUBEXPT={experiment},forecast_length={forecast_length},gefs_member={member},config_path={param},model_id={model_id},curr_datetime={curr_datetime}', \
             'mlgefs_runfcst_ursa.sh']
     elif forecast_run_type == 'cpu':
         command2 = ['sbatch', f'--dependency=afterok:{job_id1}', '--nodes=1', '--cpus-per-task=180', f'--account={account}', '--partition=u1-compute', \
-                '--qos=batch', '--exclusive', '--time=01:30:00', f'--job-name=run_{member}', f'--output=slurm/fcst_{curr_datetime}_{member}_%j.log', \
-            f'--error=slurm/fcst_{curr_datetime}_{member}_%j.log', f'--export=gefs_member={member},config_path={param},model_id={model_id},curr_datetime={curr_datetime}', \
+                '--qos=batch', '--exclusive', '--time=01:30:00', f'--job-name=run_{member}', f'--output=output/fcst_{curr_datetime}_{member}_%j.log', \
+            f'--error=output/fcst_{curr_datetime}_{member}_%j.log', f'--export=SUBEXPT={experiment},forecast_length={forecast_length},gefs_member={member},config_path={param},model_id={model_id},curr_datetime={curr_datetime}', \
             'mlgefs_runfcst_ursa.sh']
     else:
         raise NotImplementedError(f'forecast_run_type of {forecast_run_type} is not supported!')
@@ -78,22 +78,22 @@ def submit_slurm_run(member, param, model_id, curr_datetime, prev_datetime):
 
     #Step 3 - run TC_tracker
     command3 = ['sbatch', f'--dependency=afterok:{job_id2}', '--nodes=1', '--ntasks=1', f'--account={account}', \
-        '--partition=u1-compute', '--time=30:00', '--mem=90g', f'--job-name=tctracker_{member}', f'--output=slurm/tctracker_{curr_datetime}_{member}_%j.log', \
-        f'--error=slurm/tctracker_{curr_datetime}_{member}_%j.log', f'--export=gefs_member={member},PDY={curr_datetime[:8]},cyc={curr_datetime[8:]}', \
+        '--partition=u1-compute', '--time=30:00', '--mem=90g', f'--job-name=tctracker_{member}', f'--output=output/tctracker_{curr_datetime}_{member}_%j.log', \
+        f'--error=output/tctracker_{curr_datetime}_{member}_%j.log', f'--export=SUBEXPT={experiment},forecast_length={forecast_length},gefs_member={member},PDY={curr_datetime[:8]},cyc={curr_datetime[8:]}', \
         'jAIGFS_cyclone_track_00.ecf_ursa']
     job_id3 = get_job_id(command3)
 
     ##Step 4 - upload data to s3 bucket or hpss
     if archive_type == 's3':
         command4 = ['sbatch', f'--dependency=afterok:{job_id3}', '--nodes=1', '--ntasks=1', f'--account={account}', \
-            '--partition=u1-service', '--time=30:00', f'--job-name=datadissm_{member}', f'--output=slurm/datadissm_{curr_datetime}_{member}_%j.log', \
-            f'--error=slurm/datadissm_{curr_datetime}_{member}_%j.log', f'--export=gefs_member={member},model_id={model_id},curr_datetime={curr_datetime}', \
+            '--partition=u1-service', '--time=30:00', f'--job-name=datadissm_{member}', f'--output=output/datadissm_{curr_datetime}_{member}_%j.log', \
+            f'--error=output/datadissm_{curr_datetime}_{member}_%j.log', f'--export=SUBEXPT={experiment},gefs_member={member},model_id={model_id},curr_datetime={curr_datetime}', \
             'mlgefs_datadissm_ursa.sh']
         job_id4 = get_job_id(command4)
     elif archive_type == 'hpss':
         command4 = ['sbatch', f'--dependency=afterok:{job_id3}', '--nodes=1', '--ntasks=1', f'--account={account}', \
-            '--partition=u1-service', '--time=01:30:00', f'--job-name=archhpss_{member}', f'--output=slurm/archhpss_{curr_datetime}_{member}_%j.log', \
-            f'--error=slurm/archhpss_{curr_datetime}_{member}_%j.log', f'--export=gefs_member={member},model_id={model_id},curr_datetime={curr_datetime}', \
+            '--partition=u1-service', '--time=01:30:00', f'--job-name=archhpss_{member}', f'--output=output/archhpss_{curr_datetime}_{member}_%j.log', \
+            f'--error=output/archhpss_{curr_datetime}_{member}_%j.log', f'--export=SUBEXPT={experiment},gefs_member={member},model_id={model_id},curr_datetime={curr_datetime}', \
             'mlgefs_archhpss_ursa.sh']
         job_id4 = get_job_id(command4)
     else:
@@ -102,17 +102,23 @@ def submit_slurm_run(member, param, model_id, curr_datetime, prev_datetime):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Download and process GEFS data")
     parser.add_argument("-d", "--start_datetime", help="Start datetime in the format 'YYYYMMDDHH'", default=None)
+    parser.add_argument("-e", "--experiment", help="Experiment name", default='EAGLE_ensemble')
     parser.add_argument("-a", "--account", help="Compute project account: e.g., nems", default='hurricane')
     parser.add_argument("-r", "--forecast_run_type", help="Forecast run type: gpu or cpu", default='cpu')
     parser.add_argument("-s", "--archive_type", help="Achive type: s3 or hpss", default='hpss')
+    parser.add_argument("-l", "--forecast_length", help="Forecast steps in nubmer of 6-hours", default=64)
     args = parser.parse_args()
 
     account=args.account
     forecast_run_type=args.forecast_run_type
     archive_type=args.archive_type
+    experiment=args.experiment
+    forecast_length=args.forecast_length
     print(f'account: {account}')
     print(f'forecast_run_type: {forecast_run_type}')
     print(f'archive_type: {archive_type}')
+    print(f'experiment: {experiment}')
+    print(f'forecast_length: {forecast_length}')
 
     if args.start_datetime is not None:
         now = datetime.datetime.strptime(args.start_datetime, "%Y%m%d%H")

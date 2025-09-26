@@ -4,7 +4,7 @@ set -xe
 
 date
 
-SUBEXPT=EAGLE_ensemble
+SUBEXPT=${SUBEXPT:-EAGLE_ensemble}
 COMROOT=/scratch3/NCEPDEV/stmp/${USER}/${SUBEXPT}
 HPSSROOT=/NCEPDEV/emc-hwrf/5year/${USER}/${SUBEXPT}
 num_pressure_levels=13
