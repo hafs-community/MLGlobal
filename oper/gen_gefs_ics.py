@@ -45,15 +45,15 @@ class GFSDataProcessor:
         self.keep_downloaded_data = keep_downloaded_data
         self.member = member
 
-        #self.s3 = boto3.client('s3')
-        profile_name = os.environ.get('AWS_PROFILE', 'default')
-        session = boto3.Session(profile_name=profile_name)
-        current_credentials = session.get_credentials().get_frozen_credentials()
-        self.s3 = session.client(
-            's3',
-            aws_access_key_id=current_credentials.access_key,
-            aws_secret_access_key=current_credentials.secret_key,
-        )
+        self.s3 = boto3.client('s3')
+      # profile_name = os.environ.get('AWS_PROFILE', 'default')
+      # session = boto3.Session(profile_name=profile_name)
+      # current_credentials = session.get_credentials().get_frozen_credentials()
+      # self.s3 = session.client(
+      #     's3',
+      #     aws_access_key_id=current_credentials.access_key,
+      #     aws_secret_access_key=current_credentials.secret_key,
+      # )
     
         # Specify the S3 bucket name and root directory
         self.bucket_name = 'noaa-ncepdev-none-ca-ufs-cpldcld'
