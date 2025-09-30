@@ -79,7 +79,7 @@ def submit_slurm_run(member, param, model_id, curr_datetime, prev_datetime):
     #Step 3 - run TC_tracker
     command3 = ['sbatch', f'--dependency=afterok:{job_id2}', '--nodes=1', '--ntasks=1', f'--account={account}', \
         '--partition=u1-compute', '--time=30:00', '--mem=90g', f'--job-name=tctracker_{curr_datetime}_{member}', f'--output=output/tctracker_{curr_datetime}_{member}_%j.log', \
-        f'--error=output/tctracker_{curr_datetime}_{member}_%j.log', f'--export=SUBEXPT={experiment},forecast_length={forecast_length},gefs_member={member},PDY={curr_datetime[:8]},cyc={curr_datetime[8:]}', \
+        f'--error=output/tctracker_{curr_datetime}_{member}_%j.log', f'--export=SUBEXPT={experiment},KEEPDATA={keep_data},forecast_length={forecast_length},gefs_member={member},PDY={curr_datetime[:8]},cyc={curr_datetime[8:]}', \
         'jAIGFS_cyclone_track_00.ecf_ursa']
     job_id3 = get_job_id(command3)
 
@@ -87,13 +87,13 @@ def submit_slurm_run(member, param, model_id, curr_datetime, prev_datetime):
     if archive_type == 's3':
         command4 = ['sbatch', f'--dependency=afterok:{job_id3}', '--nodes=1', '--ntasks=1', f'--account={account}', \
             '--partition=u1-service', '--time=30:00', f'--job-name=datadissm_{curr_datetime}_{member}', f'--output=output/datadissm_{curr_datetime}_{member}_%j.log', \
-            f'--error=output/datadissm_{curr_datetime}_{member}_%j.log', f'--export=SUBEXPT={experiment},gefs_member={member},model_id={model_id},curr_datetime={curr_datetime}', \
+            f'--error=output/datadissm_{curr_datetime}_{member}_%j.log', f'--export=SUBEXPT={experiment},KEEPDATA={keep_data},gefs_member={member},model_id={model_id},curr_datetime={curr_datetime}', \
             'mlgefs_datadissm_ursa.sh']
         job_id4 = get_job_id(command4)
     elif archive_type == 'hpss':
         command4 = ['sbatch', f'--dependency=afterok:{job_id3}', '--nodes=1', '--ntasks=1', f'--account={account}', \
             '--partition=u1-service', '--time=01:30:00', f'--job-name=archhpss_{curr_datetime}_{member}', f'--output=output/archhpss_{curr_datetime}_{member}_%j.log', \
-            f'--error=output/archhpss_{curr_datetime}_{member}_%j.log', f'--export=SUBEXPT={experiment},gefs_member={member},model_id={model_id},curr_datetime={curr_datetime}', \
+            f'--error=output/archhpss_{curr_datetime}_{member}_%j.log', f'--export=SUBEXPT={experiment},KEEPDATA={keep_data},gefs_member={member},model_id={model_id},curr_datetime={curr_datetime}', \
             'mlgefs_archhpss_ursa.sh']
         job_id4 = get_job_id(command4)
     else:
@@ -107,6 +107,7 @@ if __name__ == '__main__':
     parser.add_argument("-r", "--forecast_run_type", help="Forecast run type: gpu or cpu", default='cpu')
     parser.add_argument("-s", "--archive_type", help="Achive type: s3 or hpss", default='hpss')
     parser.add_argument("-l", "--forecast_length", help="Forecast steps in nubmer of 6-hours", default=64)
+    parser.add_argument("-k", "--keep_data", help="Keep run dirs after job completed or being archived", default='YES')
     args = parser.parse_args()
 
     account=args.account
@@ -114,11 +115,13 @@ if __name__ == '__main__':
     archive_type=args.archive_type
     experiment=args.experiment
     forecast_length=args.forecast_length
+    keep_data=args.keep_data.upper()
     print(f'account: {account}')
     print(f'forecast_run_type: {forecast_run_type}')
     print(f'archive_type: {archive_type}')
     print(f'experiment: {experiment}')
     print(f'forecast_length: {forecast_length}')
+    print(f'keep_data: {keep_data}')
 
     if args.start_datetime is not None:
         now = datetime.datetime.strptime(args.start_datetime, "%Y%m%d%H")
