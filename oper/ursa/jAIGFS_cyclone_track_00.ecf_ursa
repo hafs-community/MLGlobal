@@ -30,12 +30,12 @@ export PACKAGEROOT=/scratch3/NCEPDEV/nems/Linlin.Cui/git/others/TC_tracker
 export DATAROOT=/scratch3/NCEPDEV/stmp/${USER}/${SUBEXPT:-EAGLE_ensemble}/ens_tracker
 export COMROOT=${DATAROOT}/com
 export COMOUT=${COMROOT:?}/aigfs.${PDY}/${cyc}/products/atmos/cyclone/tracks
-export KEEPDATA=NO
+export KEEPDATA=${KEEPDATA:-NO}
 
 export forecast_length=${forecast_length:-64}
 export forecast_hours=$((forecast_length * 6))
-if [[ ${forecast_hours} > 240 ]]; then
-  export FHMAX_CYCLONE=${FHMAX_CYCLONE:-240}
+if [[ ${forecast_hours} > 192 ]]; then
+  export FHMAX_CYCLONE=${FHMAX_CYCLONE:-192}
 else
   export FHMAX_CYCLONE=${forecast_hours}
 fi

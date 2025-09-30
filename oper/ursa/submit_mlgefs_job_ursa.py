@@ -54,7 +54,7 @@ def submit_slurm_run(member, param, model_id, curr_datetime, prev_datetime):
     #Step 1 - generate input file
     command1 = [
         'sbatch', '--nodes=1', '--ntasks=1', '--mem=10g', f'--account={account}', '--partition=u1-service', \
-        '--time=30:00', f'--job-name=getdata_{member}', f'--output=output/getdata_{curr_datetime}_{member}_%j.log', f'--error=output/getdata_{curr_datetime}_{member}_%j.log', \
+        '--time=30:00', f'--job-name=getdata_{curr_datetime}_{member}', f'--output=output/getdata_{curr_datetime}_{member}_%j.log', f'--error=output/getdata_{curr_datetime}_{member}_%j.log', \
         f'--export=SUBEXPT={experiment},gefs_member={member},config_path={param},model_id={model_id},curr_datetime={curr_datetime},prev_datetime={prev_datetime}', \
         'mlgefs_prepdata_ursa.sh'
     ]
@@ -63,12 +63,12 @@ def submit_slurm_run(member, param, model_id, curr_datetime, prev_datetime):
     #Step 2 - run graphcast
     if forecast_run_type == 'gpu':
         command2 = ['sbatch', f'--dependency=afterok:{job_id1}', '--nodes=1', f'--account={account}', '--partition=u1-h100', \
-            '--qos=gpuwf', '--gres=gpu:h100:1', '--exclusive', '--time=30:00', f'--job-name=run_{member}', f'--output=output/fcst_{curr_datetime}_{member}_%j.log', \
+            '--qos=gpuwf', '--gres=gpu:h100:1', '--exclusive', '--time=30:00', f'--job-name=run_{curr_datetime}_{member}', f'--output=output/fcst_{curr_datetime}_{member}_%j.log', \
             f'--error=output/fcst_{curr_datetime}_{member}_%j.log', f'--export=SUBEXPT={experiment},forecast_length={forecast_length},gefs_member={member},config_path={param},model_id={model_id},curr_datetime={curr_datetime}', \
             'mlgefs_runfcst_ursa.sh']
     elif forecast_run_type == 'cpu':
         command2 = ['sbatch', f'--dependency=afterok:{job_id1}', '--nodes=1', '--cpus-per-task=180', f'--account={account}', '--partition=u1-compute', \
-                '--qos=batch', '--exclusive', '--time=01:30:00', f'--job-name=run_{member}', f'--output=output/fcst_{curr_datetime}_{member}_%j.log', \
+                '--qos=batch', '--exclusive', '--time=01:30:00', f'--job-name=run_{curr_datetime}_{member}', f'--output=output/fcst_{curr_datetime}_{member}_%j.log', \
             f'--error=output/fcst_{curr_datetime}_{member}_%j.log', f'--export=SUBEXPT={experiment},forecast_length={forecast_length},gefs_member={member},config_path={param},model_id={model_id},curr_datetime={curr_datetime}', \
             'mlgefs_runfcst_ursa.sh']
     else:
@@ -78,7 +78,7 @@ def submit_slurm_run(member, param, model_id, curr_datetime, prev_datetime):
 
     #Step 3 - run TC_tracker
     command3 = ['sbatch', f'--dependency=afterok:{job_id2}', '--nodes=1', '--ntasks=1', f'--account={account}', \
-        '--partition=u1-compute', '--time=30:00', '--mem=90g', f'--job-name=tctracker_{member}', f'--output=output/tctracker_{curr_datetime}_{member}_%j.log', \
+        '--partition=u1-compute', '--time=30:00', '--mem=90g', f'--job-name=tctracker_{curr_datetime}_{member}', f'--output=output/tctracker_{curr_datetime}_{member}_%j.log', \
         f'--error=output/tctracker_{curr_datetime}_{member}_%j.log', f'--export=SUBEXPT={experiment},forecast_length={forecast_length},gefs_member={member},PDY={curr_datetime[:8]},cyc={curr_datetime[8:]}', \
         'jAIGFS_cyclone_track_00.ecf_ursa']
     job_id3 = get_job_id(command3)
@@ -86,13 +86,13 @@ def submit_slurm_run(member, param, model_id, curr_datetime, prev_datetime):
     ##Step 4 - upload data to s3 bucket or hpss
     if archive_type == 's3':
         command4 = ['sbatch', f'--dependency=afterok:{job_id3}', '--nodes=1', '--ntasks=1', f'--account={account}', \
-            '--partition=u1-service', '--time=30:00', f'--job-name=datadissm_{member}', f'--output=output/datadissm_{curr_datetime}_{member}_%j.log', \
+            '--partition=u1-service', '--time=30:00', f'--job-name=datadissm_{curr_datetime}_{member}', f'--output=output/datadissm_{curr_datetime}_{member}_%j.log', \
             f'--error=output/datadissm_{curr_datetime}_{member}_%j.log', f'--export=SUBEXPT={experiment},gefs_member={member},model_id={model_id},curr_datetime={curr_datetime}', \
             'mlgefs_datadissm_ursa.sh']
         job_id4 = get_job_id(command4)
     elif archive_type == 'hpss':
         command4 = ['sbatch', f'--dependency=afterok:{job_id3}', '--nodes=1', '--ntasks=1', f'--account={account}', \
-            '--partition=u1-service', '--time=01:30:00', f'--job-name=archhpss_{member}', f'--output=output/archhpss_{curr_datetime}_{member}_%j.log', \
+            '--partition=u1-service', '--time=01:30:00', f'--job-name=archhpss_{curr_datetime}_{member}', f'--output=output/archhpss_{curr_datetime}_{member}_%j.log', \
             f'--error=output/archhpss_{curr_datetime}_{member}_%j.log', f'--export=SUBEXPT={experiment},gefs_member={member},model_id={model_id},curr_datetime={curr_datetime}', \
             'mlgefs_archhpss_ursa.sh']
         job_id4 = get_job_id(command4)

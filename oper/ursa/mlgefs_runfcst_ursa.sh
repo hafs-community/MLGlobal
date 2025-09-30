@@ -34,7 +34,8 @@ numactl --interleave=all python run_graphcast_ens.py -i $DATAROOT/pmlgefs."$PDY"
 pertmember=`echo $gefs_member | cut -c2-3`
 weight=$(expr $pertmember + 0)
 mkdir -p $DATAROOT/pmlgefs."$PDY"/"$cyc"/forecasts_"$num_pressure_levels"_levels_"$gefs_member"_model_"$weight"/input
-cp -p $DATAROOT/pmlgefs."$PDY"/"$cyc"/source-ge"$gefs_member"_date-"$curr_datetime"_res-0.25_levels-"$num_pressure_levels"_steps-2.nc $DATAROOT/pmlgefs."$PDY"/"$cyc"/forecasts_"$num_pressure_levels"_levels_"$gefs_member"_model_"$weight"/input/
+mv $DATAROOT/pmlgefs."$PDY"/"$cyc"/source-ge"$gefs_member"_date-"$curr_datetime"_res-0.25_levels-"$num_pressure_levels"_steps-2.nc $DATAROOT/pmlgefs."$PDY"/"$cyc"/forecasts_"$num_pressure_levels"_levels_"$gefs_member"_model_"$weight"/input/
+#cp -p $DATAROOT/pmlgefs."$PDY"/"$cyc"/source-ge"$gefs_member"_date-"$curr_datetime"_res-0.25_levels-"$num_pressure_levels"_steps-2.nc $DATAROOT/pmlgefs."$PDY"/"$cyc"/forecasts_"$num_pressure_levels"_levels_"$gefs_member"_model_"$weight"/input/
 
 # Calculate and print the execution time
 end_time=$(date +%s)  # Record the end time in seconds since the epoch
